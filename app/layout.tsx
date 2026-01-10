@@ -13,9 +13,10 @@ const geistMono = Geist_Mono({
 
 import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "./context/auth-context";
+import { Toaster } from "sonner";
 
 const APP_NAME = "PWA Template";
-const APP_DEFAULT_TITLE = "Arc Tech PWA Template";
+const APP_DEFAULT_TITLE = "Sky Paws and Claws";
 const APP_TITLE_TEMPLATE = "%s - PWA App";
 const APP_DESCRIPTION = "Best PWA template in the world!";
 
@@ -69,7 +70,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          {children}
+          <Toaster theme="dark" position="top-right" richColors />
+        </AuthProvider>
       </body>
     </html>
   );
