@@ -20,6 +20,8 @@ interface Transaction extends Models.Document {
   clinicalNotes?: string;
   nextAppointmentDate?: string | null;
   recordedWeight?: string;
+  clientName?: string; // Add this line
+  customerName?: string;
 }
 
 export interface AddTransactionData {
@@ -40,7 +42,7 @@ interface TransactionState {
   transactions: Transaction[];
   installments: Record<string, Installment[]>; // Added missing state type
   isLoading: boolean;
-  fetchTransactions: (petId: string) => Promise<void>;
+  fetchTransactions: (petId?: string) => Promise<void>;
   // UPDATED: Return type matches the return statement
   addTransaction: (
     data: AddTransactionData
@@ -60,7 +62,7 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
   installments: {},
   isLoading: false,
 
-  fetchTransactions: async (petId: string) => {
+  fetchTransactions: async (petId?: string) => {
     const { isLoading, transactions } = get();
 
     // Prevent fetching if already loading
@@ -72,10 +74,21 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
 
     set({ isLoading: true });
     try {
+      // 1. Initialize with common queries (like sorting)
+      const queries = [Query.orderDesc("transactionDate")];
+
+      // 2. ONLY add the petId filter if petId is provided and valid
+      if (petId) {
+        queries.push(Query.equal("petId", petId));
+      } else {
+        // If fetching for Reports (global), you might want a higher limit
+        queries.push(Query.limit(100));
+      }
+
       const response = await databases.listDocuments(
         DATABASE_ID!,
         TRANSACTION_COLLECTION_ID,
-        [Query.equal("petId", petId), Query.orderDesc("transactionDate")]
+        queries // Use the dynamic array here
       );
       set({
         transactions: response.documents as unknown as Transaction[],

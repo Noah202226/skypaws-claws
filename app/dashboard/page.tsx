@@ -7,6 +7,7 @@ import Header from "@/app/dashboard/components/Header";
 import OverviewSection from "@/app/dashboard/components/Overview";
 import ClientsSection from "@/app/dashboard/components/Clients";
 import SettingsSection from "@/app/dashboard/components/Settings";
+import ReportsSection from "./components/ReportsSection";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -36,6 +37,7 @@ export default function Dashboard() {
           {currentTab === "overview" && <OverviewSection />}
           {currentTab === "clients" && <ClientsSection />}
           {currentTab === "settings" && <SettingsSection />}
+          {currentTab === "reports" && <ReportsSection />}
         </div>
       </main>
 

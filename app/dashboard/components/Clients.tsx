@@ -77,8 +77,6 @@ export default function ClientsSection() {
     });
   }, [clientsWithPets, searchQuery]);
 
-  console.log(clients); // this one!
-
   return (
     <div className="flex flex-col h-full space-y-6 animate-in fade-in duration-500 overflow-hidden">
       {/* --- Header Area (Fixed) --- */}

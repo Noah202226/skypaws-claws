@@ -29,8 +29,8 @@ export default function Sidebar({
 }: SidebarProps) {
   const navItems = [
     { id: "clients", label: "Clients", icon: Users },
-    { id: "sales", label: "Reports", icon: List },
-    { id: "overview", label: "Overview", icon: Layout },
+    { id: "reports", label: "Reports", icon: List },
+    // { id: "overview", label: "Overview", icon: Layout },
   ];
 
   return (
@@ -108,7 +108,7 @@ export default function Sidebar({
           </Button>
 
           <a
-            href="https://www.facebook.com/profile.php?id=61550742512918"
+            href="https://www.facebook.com/profile.php?id=100090768115762&rdid=6XR5H0KzLjYYwvtB&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F1C3gPEKxSo%2F#"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-3 px-4 py-3 text-sm text-slate-500 hover:text-blue-500 transition-colors"
