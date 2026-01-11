@@ -26,7 +26,7 @@ export default function Home() {
           {/* Using the Sky Paws & Claws Logo Style */}
           <div className="relative h-12 w-12 rounded-full border-2 border-pink-500 bg-white p-1 overflow-hidden shrink-0">
             <Image
-              src="/logo.png" // Ensure you save the uploaded logo here
+              src="/favicon-512x512.png" // Ensure you save the uploaded logo here
               alt="Sky Paws Logo"
               fill
               className="object-contain"

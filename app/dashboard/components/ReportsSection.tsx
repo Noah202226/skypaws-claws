@@ -383,7 +383,7 @@ export default function ReportsSection() {
         {/* SIDEBAR ANALYTICS */}
         <div className="space-y-6">
           {/* TOP DEBTORS - CRITICAL FOR OWNER */}
-          <div className="bg-red-500/5 border border-red-500/10 rounded-[2rem] p-6 shadow-2xl">
+          <div className="bg-red-500/5 border border-red-500/10 rounded-4xl p-6 shadow-2xl">
             <h3 className="text-[10px] font-black uppercase text-red-400 mb-6 flex items-center gap-2">
               <AlertCircle className="w-3 h-3" /> Highest Unpaid (Action)
             </h3>
@@ -416,7 +416,7 @@ export default function ReportsSection() {
           </div>
 
           {/* SERVICE IMPACT */}
-          <div className="bg-slate-900/30 border border-slate-800/60 rounded-[2rem] p-6">
+          <div className="bg-slate-900/30 border border-slate-800/60 rounded-4xl p-6">
             <h3 className="text-[10px] font-black uppercase text-slate-400 mb-6 flex items-center gap-2">
               <PieIcon className="w-3 h-3 text-emerald-500" /> Revenue by
               Service

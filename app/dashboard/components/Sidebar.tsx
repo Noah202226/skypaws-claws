@@ -52,7 +52,7 @@ export default function Sidebar({
         <div className="flex items-center gap-3 mb-10 px-2">
           <div className="relative h-10 w-10 rounded-full border-2 border-pink-500 bg-white p-1 overflow-hidden shrink-0 shadow-[0_0_15px_rgba(236,72,153,0.3)]">
             <Image
-              src="/logo.png"
+              src="/favicon-512x512.png"
               alt="Logo"
               width={40}
               height={40}
