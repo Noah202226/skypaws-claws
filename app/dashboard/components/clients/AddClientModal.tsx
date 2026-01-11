@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Loader2, PawPrint } from "lucide-react";
 import { useClientStore } from "@/app/store/useClientStore";
-import { toast } from "sonner"; // [Import Sonner]
+import { toast } from "sonner";
 
 interface Props {
   isOpen: boolean;
@@ -33,15 +33,16 @@ export default function AddClientModal({ isOpen, onClose }: Props) {
     setIsSubmitting(true);
 
     try {
+      // Passes the entire object; the store will split it into Client and Pet
       await addClient(formData);
 
-      // ✅ SUCCESS TOAST
       toast.success("Registration Successful!", {
-        description: `${formData.name} has been added to the database.`,
+        description: `${formData.name} and ${
+          formData.petName || "client"
+        } added.`,
         duration: 4000,
       });
 
-      // Reset form on success
       setFormData({
         name: "",
         phone: "",
@@ -56,7 +57,6 @@ export default function AddClientModal({ isOpen, onClose }: Props) {
       });
       onClose();
     } catch (error: any) {
-      // ❌ ERROR TOAST
       toast.error("Registration Failed", {
         description: error.message || "Something went wrong while saving.",
       });
@@ -68,13 +68,13 @@ export default function AddClientModal({ isOpen, onClose }: Props) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-8 animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
+      <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-8 animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh] custom-scrollbar">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">
             Register New <span className="text-indigo-500">Client</span>
@@ -169,7 +169,7 @@ export default function AddClientModal({ isOpen, onClose }: Props) {
                   onChange={(e) =>
                     setFormData({ ...formData, birthdate: e.target.value })
                   }
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-600 transition-colors"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-600 transition-colors scheme-dark"
                 />
               </div>
               <div className="space-y-1">
@@ -224,7 +224,6 @@ export default function AddClientModal({ isOpen, onClose }: Props) {
                     setFormData({ ...formData, petName: e.target.value })
                   }
                   placeholder="Bantay"
-                  // Changed focus border to pink to match the section icon
                   className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-pink-500/50 transition-all"
                 />
               </div>
@@ -265,7 +264,7 @@ export default function AddClientModal({ isOpen, onClose }: Props) {
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 h-14 font-black uppercase tracking-widest text-xs mt-4 shadow-[0_0_20px_rgba(79,70,229,0.3)]"
+            className="w-full bg-indigo-600 hover:bg-indigo-500 h-14 font-black uppercase tracking-widest text-xs mt-4 shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-[0.98]"
           >
             {isSubmitting ? (
               <Loader2 className="animate-spin h-5 w-5" />

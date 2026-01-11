@@ -1,14 +1,16 @@
 // types/index.ts
 import { Models } from "appwrite";
 
-export interface Pet {
+// Extend Models.Document to get $id, $createdAt, $collectionId, etc.
+export interface Pet extends Models.Document {
   name: string;
-  type: "Dog" | "Cat" | "Other";
+  type: "Dog" | "Cat" | "Other" | string;
   breed: string;
-  age?: number;
+  clientId: string; // The relational link to the Client
+  age?: string;
+  medicalNotes?: string;
 }
 
-// We extend Models.Document so we get Appwrite system fields like $id and $createdAt
 export interface ClientData extends Models.Document {
   name: string;
   phone: string;
@@ -17,6 +19,6 @@ export interface ClientData extends Models.Document {
   age?: string;
   occupation?: string;
   birthdate?: string;
-  // This is now an array of JSON strings
-  pets: string[];
+  // NOTE: We no longer include a 'pets' field here because
+  // pets are now a separate collection linked by clientId.
 }
