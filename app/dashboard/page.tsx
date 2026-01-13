@@ -10,6 +10,7 @@ import SettingsSection from "@/app/dashboard/components/Settings";
 import ReportsSection from "./components/ReportsSection";
 import AppointmentReminders from "./AppointmentReminders";
 import { Clock } from "lucide-react";
+import { useTransactionStore } from "../store/useTransactionStore";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -19,6 +20,13 @@ export default function Dashboard() {
 
   // --- THEME LOGIC START ---
   const [theme, setTheme] = useState<"light" | "dark">("dark");
+
+  const { fetchTransactions } = useTransactionStore(); // 1. Pull the fetch function
+
+  useEffect(() => {
+    // 2. Trigger the fetch when the dashboard first opens
+    fetchTransactions();
+  }, [fetchTransactions]);
 
   useEffect(() => {
     // Check local storage or system on mount
