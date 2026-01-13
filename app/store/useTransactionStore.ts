@@ -63,43 +63,35 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
   isLoading: false,
 
   fetchTransactions: async (petId?: string) => {
-    const { isLoading, transactions } = get();
-
-    // Prevent fetching if already loading
-    if (isLoading) return;
-
-    // Guard 2: Optional - Don't fetch if we already have the data
-    // and the first transaction belongs to this pet.
-    if (transactions.length > 0 && transactions[0].petId === petId) return;
+    if (get().isLoading) return;
 
     set({ isLoading: true });
     try {
-      // 1. Initialize with common queries (like sorting)
       const queries = [Query.orderDesc("transactionDate")];
-
-      // 2. ONLY add the petId filter if petId is provided and valid
       if (petId) {
         queries.push(Query.equal("petId", petId));
       } else {
-        // If fetching for Reports (global), you might want a higher limit
         queries.push(Query.limit(100));
       }
 
       const response = await databases.listDocuments(
         DATABASE_ID!,
         TRANSACTION_COLLECTION_ID,
-        queries // Use the dynamic array here
+        queries
       );
       set({
         transactions: response.documents as unknown as Transaction[],
-        isLoading: false,
       });
     } catch (error) {
+      console.error("Fetch error:", error);
+    } finally {
+      // Use finally to ensure loading stops even if it fails
       set({ isLoading: false });
     }
   },
 
   addTransaction: async (data: AddTransactionData) => {
+    set({ isLoading: true }); // Start Loading
     try {
       const {
         initialAmountPaid,
@@ -141,12 +133,14 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
     } catch (error) {
       console.error("Combined Create Error:", error);
       throw error;
+    } finally {
+      set({ isLoading: false }); // End Loading
     }
   },
 
   updateTransaction: async (id: string, data: Partial<AddTransactionData>) => {
+    set({ isLoading: true });
     try {
-      // Create a payload removing fields that aren't in the Transaction collection
       const { initialAmountPaid, paymentMethod, ...updatePayload } = data;
 
       const response = await databases.updateDocument(
@@ -164,10 +158,13 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
     } catch (error) {
       console.error("Update Error:", error);
       throw error;
+    } finally {
+      set({ isLoading: false });
     }
   },
 
   deleteTransaction: async (id: string) => {
+    set({ isLoading: true });
     try {
       await databases.deleteDocument(
         DATABASE_ID!,
@@ -180,6 +177,8 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
     } catch (error) {
       console.error("Delete Error:", error);
       throw error;
+    } finally {
+      set({ isLoading: false });
     }
   },
 }));

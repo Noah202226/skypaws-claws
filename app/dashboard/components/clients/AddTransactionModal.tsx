@@ -10,6 +10,7 @@ import {
   CalendarDays,
   Plus,
   ChevronDown,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTransactionStore } from "@/app/store/useTransactionStore";
@@ -21,7 +22,8 @@ export default function AddTransactionModal({
   onClose,
   initialData = null,
 }: any) {
-  const { addTransaction, updateTransaction } = useTransactionStore();
+  const { addTransaction, updateTransaction, isLoading } =
+    useTransactionStore();
 
   // Input States
   const [serviceName, setServiceName] = useState("");
@@ -189,6 +191,7 @@ export default function AddTransactionModal({
                   <input
                     type="number"
                     step="0.1"
+                    autoFocus
                     className="w-full bg-muted/50 border border-border rounded-2xl py-4 pl-12 pr-4 text-foreground text-sm outline-none focus:border-indigo-600 transition-all"
                     value={currentWeight}
                     onChange={(e) => setCurrentWeight(e.target.value)}
@@ -320,10 +323,32 @@ export default function AddTransactionModal({
         <div className="mt-10 pt-8 border-t border-border">
           <Button
             type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-500 h-16 md:h-20 rounded-4xl font-black uppercase text-xs md:text-sm tracking-[0.3em] shadow-xl shadow-indigo-600/20 transition-all active:scale-[0.98]"
+            disabled={isLoading}
+            className={`w-full h-16 md:h-20 rounded-4xl font-black uppercase text-xs md:text-sm tracking-[0.3em] shadow-xl transition-all active:scale-[0.98] flex items-center justify-center gap-3
+      ${
+        isLoading
+          ? "bg-slate-200 dark:bg-slate-800 text-slate-500 cursor-not-allowed shadow-none"
+          : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/20"
+      }`}
           >
-            {initialData ? "Update Medical Record" : "Confirm & Save Visit"}
+            {isLoading ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Syncing with Cloud...</span>
+              </>
+            ) : initialData ? (
+              "Update Medical Record"
+            ) : (
+              "Confirm & Save Visit"
+            )}
           </Button>
+
+          {/* Optional: Add a small status text below the button when loading */}
+          {isLoading && (
+            <p className="text-center text-[9px] font-black uppercase tracking-widest text-indigo-600 animate-pulse mt-4">
+              Please do not close the window
+            </p>
+          )}
         </div>
       </form>
     </div>

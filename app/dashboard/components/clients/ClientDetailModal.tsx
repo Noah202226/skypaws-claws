@@ -35,6 +35,10 @@ interface EditableItemProps {
 }
 
 export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [isShaking, setIsShaking] = useState(false);
+
   const { updateClient, deleteClient } = useClientStore();
   const { clientPets, fetchPetsByClient, isPetsLoading, createPet } =
     usePetStore();
@@ -102,19 +106,30 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
   };
 
   const handleDeleteClient = async () => {
-    if (!showDeleteConfirm) {
-      setShowDeleteConfirm(true);
+    // Replace 'your_password_here' with your desired secret or a variable from env
+    if (deletePassword !== "123GHouls@#") {
+      setIsShaking(true);
+      toast.error("Invalid Security Password");
+      setTimeout(() => setIsShaking(false), 500);
       return;
     }
+
     setIsDeleting(true);
     try {
       await deleteClient(client.$id);
-      toast.error("Client record deleted permanently");
-      setShowDeleteConfirm(false);
+
+      // Refresh global states so the sidebar updates
+      await Promise.all([
+        usePetStore.getState().fetchAllPets(true),
+        useClientStore.getState().fetchClients(true),
+        // If you have a transaction store, refresh it here too
+      ]);
+
+      toast.error("Client record eradicated successfully");
+      setIsDeleteConfirmOpen(false);
       onClose();
     } catch (err) {
       toast.error("Failed to delete client");
-      setShowDeleteConfirm(false);
     } finally {
       setIsDeleting(false);
     }
@@ -258,7 +273,7 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
             </div>
 
             {isAddingPet && (
-              <div className="grid grid-cols-4 gap-2 p-3 bg-indigo-50 dark:bg-indigo-600/5 border border-indigo-200 dark:border-indigo-600/20 rounded-xl animate-in slide-in-from-top-2 duration-200">
+              <div className="grid grid-cols-3 gap-2 p-3 bg-indigo-50 dark:bg-indigo-600/5 border border-indigo-200 dark:border-indigo-600/20 rounded-xl animate-in slide-in-from-top-2 duration-200">
                 <input
                   placeholder="Pet Name"
                   className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500"
@@ -279,14 +294,14 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
                   <option>Other</option>
                 </select>
 
-                <input
+                {/* <input
                   placeholder="Breed"
                   className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500"
                   value={newPet.breed}
                   onChange={(e) =>
                     setNewPet({ ...newPet, breed: e.target.value })
                   }
-                />
+                /> */}
 
                 <Button
                   onClick={handleAddPet}
@@ -362,20 +377,12 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
               </Button>
             )}
             <Button
-              onClick={handleDeleteClient}
+              onClick={() => setIsDeleteConfirmOpen(true)} // Opens the password modal
               disabled={isDeleting}
-              className={`h-11 px-6 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${
-                showDeleteConfirm
-                  ? "bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-500/20"
-                  : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-500 border border-transparent"
-              }`}
+              className="h-11 px-6 text-[10px] font-black uppercase tracking-widest rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-500 hover:text-red-600 transition-all"
             >
-              {isDeleting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Trash2 className="h-4 w-4 mr-2" />
-              )}
-              {showDeleteConfirm ? "Confirm Delete" : "Delete Client"}
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Client
             </Button>
           </div>
         </div>
@@ -386,6 +393,80 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
         isOpen={!!selectedPet}
         onClose={() => setSelectedPet(null)}
       />
+
+      {isDeleteConfirmOpen && (
+        <div className="fixed inset-0 z-110 flex items-center justify-center p-6">
+          <div
+            className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl animate-in fade-in duration-300"
+            onClick={() => {
+              setIsDeleteConfirmOpen(false);
+              setDeletePassword("");
+            }}
+          />
+
+          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-rose-500/20 rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="flex flex-col items-center text-center">
+              <div className="h-20 w-20 rounded-3xl bg-rose-500/10 flex items-center justify-center mb-6">
+                <AlertTriangle className="h-10 w-10 text-rose-500 animate-pulse" />
+              </div>
+
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase italic tracking-tighter mb-2">
+                Critical Action
+              </h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
+                You are deleting the client{" "}
+                <span className="font-bold text-slate-900 dark:text-white uppercase">
+                  {client.name}
+                </span>
+                . All associated pets, medical records, and appointments will be
+                detached or removed.
+              </p>
+
+              <div className="w-full space-y-4">
+                <input
+                  type="password"
+                  name="security-auth-challenge" // Unique name
+                  autoComplete="new-password"
+                  placeholder="Enter security password"
+                  className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-2xl py-4 px-6 text-sm text-center font-bold tracking-widest outline-none transition-all dark:text-white ${
+                    isShaking
+                      ? "border-rose-500 animate-shake ring-4 ring-rose-500/10"
+                      : "border-slate-200 dark:border-slate-800 focus:border-rose-500"
+                  }`}
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleDeleteClient()}
+                  autoFocus
+                />
+
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setIsDeleteConfirmOpen(false);
+                      setDeletePassword("");
+                    }}
+                    className="h-14 rounded-2xl font-black uppercase text-[10px] tracking-widest text-slate-500"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleDeleteClient}
+                    disabled={isDeleting}
+                    className="h-14 rounded-2xl font-black uppercase text-[10px] tracking-widest bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-600/20"
+                  >
+                    {isDeleting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Wipe Record"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

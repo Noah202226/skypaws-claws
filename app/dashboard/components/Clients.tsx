@@ -22,6 +22,7 @@ import { formatDate } from "./utils/dateFormatter";
 import { usePetStore } from "@/app/store/usePetStore";
 import { Pet } from "@/app/types/index";
 import AppointmentReminders from "../AppointmentReminders";
+import { useTransactionStore } from "@/app/store/useTransactionStore";
 
 export default function ClientsSection() {
   const {
@@ -35,13 +36,15 @@ export default function ClientsSection() {
   } = useClientStore();
 
   const { allPets, fetchAllPets } = usePetStore();
+  const { fetchTransactions } = useTransactionStore();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
 
   useEffect(() => {
     fetchClients();
     fetchAllPets();
-  }, [fetchClients, fetchAllPets]);
+    fetchTransactions();
+  }, [fetchClients, fetchAllPets, fetchTransactions]);
 
   const clientsWithPets = useMemo(() => {
     // 1. Always map clients even if pets aren't loaded yet to prevent empty screen
@@ -97,7 +100,14 @@ export default function ClientsSection() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => fetchClients(true)}
+            onClick={async () => {
+              // This will refresh both Clients and Pets
+              await Promise.all([
+                fetchClients(true),
+                fetchAllPets(true),
+                fetchTransactions(), // <--- This updates the sidebar data!
+              ]);
+            }}
             disabled={isLoading}
             className="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-white transition-colors"
           >
@@ -260,12 +270,19 @@ export default function ClientsSection() {
       <ClientDetailModal
         client={selectedClient}
         isOpen={!!selectedClient}
-        onClose={() => setSelectedClient(null)}
+        onClose={async () => {
+          setSelectedClient(null);
+          await Promise.all([fetchAllPets(true), fetchTransactions()]);
+        }}
       />
       <PetDetailModal
         pet={selectedPet}
         isOpen={!!selectedPet}
-        onClose={() => setSelectedPet(null)}
+        onClose={async () => {
+          setSelectedPet(null);
+          // Refresh pets and transactions so the sidebar removes the deleted pet's reminders
+          await Promise.all([fetchAllPets(true), fetchTransactions()]);
+        }}
       />
 
       <style jsx global>{`

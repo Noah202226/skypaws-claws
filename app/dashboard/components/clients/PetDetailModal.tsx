@@ -26,6 +26,9 @@ import { useInstallmentStore } from "@/app/store/useInstallmentStore";
 import { usePetStore } from "@/app/store/usePetStore";
 
 export default function PetDetailModal({ pet, isOpen, onClose }: any) {
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingTx, setEditingTx] = useState<any>(null);
 
@@ -37,6 +40,8 @@ export default function PetDetailModal({ pet, isOpen, onClose }: any) {
     new Date().toISOString().split("T")[0]
   );
 
+  const [isShaking, setIsShaking] = useState(false);
+
   const { transactions, fetchTransactions, isLoading, deleteTransaction } =
     useTransactionStore();
   const {
@@ -46,7 +51,7 @@ export default function PetDetailModal({ pet, isOpen, onClose }: any) {
     deleteInstallment,
     isLoading: loadingInstallments,
   } = useInstallmentStore();
-  const { deletePet } = usePetStore();
+  const { deletePet, isLoading: isDeletingPet, fetchAllPets } = usePetStore();
 
   const latestTx = useMemo(() => transactions[0] || null, [transactions]);
 
@@ -116,25 +121,20 @@ export default function PetDetailModal({ pet, isOpen, onClose }: any) {
   };
 
   const handleDeletePet = async () => {
-    // Stage 1: Basic confirmation
-    const firstConfirm = confirm(
-      `Are you sure you want to delete ${pet.name}? This cannot be undone.`
-    );
-    if (!firstConfirm) return;
+    if (deletePassword !== "123GHouls@#") {
+      setIsShaking(true);
+      toast.error("Incorrect security password");
 
-    // Stage 2: Intent confirmation
-    const secondConfirm = prompt(
-      `Please type the pet's name "${pet.name}" to confirm deletion:`
-    );
-    if (secondConfirm !== pet.name) {
-      toast.error("Name mismatch. Deletion cancelled.");
+      // Reset shaking state after animation finishes (400ms)
+      setTimeout(() => setIsShaking(false), 500);
       return;
     }
 
     try {
       await deletePet(pet.$id);
       toast.success("Patient profile deleted successfully");
-      onClose(); // Close the modal
+      setIsDeleteConfirmOpen(false);
+      onClose();
     } catch (error) {
       toast.error("Failed to delete pet profile");
     }
@@ -147,7 +147,10 @@ export default function PetDetailModal({ pet, isOpen, onClose }: any) {
       {/* Theme-Aware Overlay */}
       <div
         className="absolute inset-0 bg-slate-200/60 dark:bg-slate-950/90 backdrop-blur-xl"
-        onClick={onClose}
+        onClick={() => {
+          onClose();
+          fetchAllPets();
+        }}
       />
 
       <div className="relative w-full max-w-9xl h-full md:h-[90vh] bg-white dark:bg-slate-950 border-x md:border border-slate-200 dark:border-slate-800 md:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col">
@@ -312,11 +315,11 @@ export default function PetDetailModal({ pet, isOpen, onClose }: any) {
                           {/* Clinic/Medical Notes */}
                           {tx.clinicalNotes &&
                             tx.clinicalNotes.trim() !== "" && (
-                              <div className="p-4 bg-indigo-50/30 dark:bg-indigo-500/5 rounded-2xl border border-indigo-100/50 dark:border-indigo-500/20">
-                                <h6 className="text-[8px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-1 flex items-center gap-1">
-                                  <Edit3 size={10} /> Clinical Findings
-                                </h6>
-                                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                              <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-1">
+                                  Clinical Findings
+                                </p>
+                                <p className="text-sm line-clamp-2 hover:line-clamp-none transition-all cursor-pointer whitespace-pre-wrap wrap-break-word">
                                   {tx.clinicalNotes}
                                 </p>
                               </div>
@@ -523,7 +526,7 @@ export default function PetDetailModal({ pet, isOpen, onClose }: any) {
                     history. This action is irreversible.
                   </p>
                   <Button
-                    onClick={handleDeletePet}
+                    onClick={() => setIsDeleteConfirmOpen(true)} // Open the modern modal
                     variant="ghost"
                     className="w-full border border-rose-500/30 hover:bg-rose-600 hover:text-white text-rose-500 font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl transition-all"
                   >
@@ -545,6 +548,82 @@ export default function PetDetailModal({ pet, isOpen, onClose }: any) {
         }}
         initialData={editingTx}
       />
+
+      {/* MODERN DELETE CONFIRMATION MODAL */}
+      {isDeleteConfirmOpen && (
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-6">
+          <div
+            className="absolute inset-0 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300"
+            onClick={() => setIsDeleteConfirmOpen(false)}
+          />
+
+          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-rose-500/20 rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="flex flex-col items-center text-center">
+              <div className="h-20 w-20 rounded-3xl bg-rose-500/10 flex items-center justify-center mb-6">
+                <Trash2 className="h-10 w-10 text-rose-500" />
+              </div>
+
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase italic tracking-tighter mb-2">
+                Final Warning
+              </h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
+                You are about to permanently delete{" "}
+                <span className="font-bold text-slate-900 dark:text-white uppercase">
+                  {pet.name}
+                </span>
+                . This will erase all medical history and billing data.
+              </p>
+
+              <div className="w-full space-y-4">
+                <div className="relative">
+                  <input
+                    type="password"
+                    name="security-auth-challenge" // Unique name
+                    autoComplete="new-password"
+                    placeholder="Enter security password"
+                    className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-2xl py-4 px-6 text-sm text-center font-bold tracking-widest outline-none transition-all dark:text-white ${
+                      isShaking
+                        ? "border-rose-500 animate-shake ring-4 ring-rose-500/10"
+                        : "border-slate-200 dark:border-slate-800 focus:border-rose-500"
+                    }`}
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setIsDeleteConfirmOpen(false);
+                      setDeletePassword("");
+                    }}
+                    className="h-14 rounded-2xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleDeletePet}
+                    // This 'isDeleting' now comes directly from usePetStore()
+                    disabled={isDeletingPet}
+                    className="h-14 rounded-2xl font-black uppercase text-[10px] tracking-widest bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-600/20 disabled:opacity-50 transition-all"
+                  >
+                    {isDeletingPet ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Eradicating File...</span>
+                      </div>
+                    ) : (
+                      "Confirm Delete"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
