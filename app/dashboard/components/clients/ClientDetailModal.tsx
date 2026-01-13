@@ -36,8 +36,6 @@ interface EditableItemProps {
 
 export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
   const { updateClient, deleteClient } = useClientStore();
-
-  // Using PetStore to handle the relational data
   const { clientPets, fetchPetsByClient, isPetsLoading, createPet } =
     usePetStore();
 
@@ -46,7 +44,6 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
 
   const [editFormData, setEditFormData] = useState({
@@ -60,7 +57,6 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
 
   const [newPet, setNewPet] = useState({ name: "", type: "Dog", breed: "" });
 
-  // Sync profile data and fetch real Pet documents from Appwrite
   useEffect(() => {
     if (client && isOpen) {
       setEditFormData({
@@ -71,8 +67,6 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
         birthdate: client.birthdate || "",
         address: client.address || "",
       });
-
-      // Fetch pets specifically belonging to this clientId
       fetchPetsByClient(client.$id);
     }
   }, [client, isOpen, fetchPetsByClient]);
@@ -96,12 +90,7 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
     if (!newPet.name) return toast.warning("Please enter a pet name");
     setIsUpdating(true);
     try {
-      // Instead of updating the client array, we create a NEW Pet document
-      await createPet({
-        ...newPet,
-        clientId: client.$id,
-      });
-
+      await createPet({ ...newPet, clientId: client.$id });
       setNewPet({ name: "", type: "Dog", breed: "" });
       setIsAddingPet(false);
       toast.success(`${newPet.name} added to records`);
@@ -133,17 +122,19 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+      {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/80 backdrop-blur-md"
+        className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
         onClick={() => {
           onClose();
           setShowDeleteConfirm(false);
         }}
       />
 
-      <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
+      {/* Modal Container */}
+      <div className="relative w-full max-w-6xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
               <User className="h-6 w-6 text-white" />
@@ -151,14 +142,14 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
             <div>
               {isEditMode ? (
                 <input
-                  className="bg-slate-950 border border-indigo-500 rounded px-2 py-1 text-white font-black italic outline-none"
+                  className="bg-white dark:bg-slate-950 border border-indigo-500 rounded px-2 py-1 text-slate-900 dark:text-white font-black italic outline-none focus:ring-1 focus:ring-indigo-500"
                   value={editFormData.name}
                   onChange={(e) =>
                     setEditFormData({ ...editFormData, name: e.target.value })
                   }
                 />
               ) : (
-                <h3 className="text-xl font-black text-white italic">
+                <h3 className="text-xl font-black text-slate-900 dark:text-white italic">
                   {client.name}
                 </h3>
               )}
@@ -172,15 +163,15 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
               onClick={() => setIsEditMode(!isEditMode)}
               className={`p-2 transition-colors rounded-lg ${
                 isEditMode
-                  ? "text-indigo-400 bg-indigo-500/10"
-                  : "text-slate-400 hover:text-indigo-400"
+                  ? "text-indigo-600 bg-indigo-500/10 dark:text-indigo-400"
+                  : "text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400"
               }`}
             >
               <Edit2 className="h-5 w-5" />
             </button>
             <button
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-white transition-colors"
+              className="p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               <X className="h-6 w-6" />
             </button>
@@ -190,7 +181,7 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
           {/* Profile Details */}
-          <div className="bg-slate-950/30 p-5 rounded-2xl border border-slate-800 space-y-4">
+          <div className="bg-slate-50 dark:bg-slate-950/30 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
             <div className="grid grid-cols-2 gap-6">
               <EditableItem
                 isEdit={isEditMode}
@@ -234,7 +225,7 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
               <Button
                 onClick={handleUpdateProfile}
                 disabled={isUpdating}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 mt-2 h-11 rounded-xl font-bold uppercase tracking-widest text-[10px]"
+                className="w-full bg-indigo-600 hover:bg-indigo-500 mt-2 h-11 rounded-xl font-bold uppercase tracking-widest text-[10px] text-white shadow-md"
               >
                 {isUpdating ? (
                   <Loader2 className="animate-spin h-4 w-4" />
@@ -249,10 +240,10 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
 
           {/* Pets List Section */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
               <div className="flex items-center gap-2">
                 <PawPrint className="h-4 w-4 text-pink-500" />
-                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <h4 className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                   Registered Patients
                 </h4>
               </div>
@@ -260,24 +251,24 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsAddingPet(!isAddingPet)}
-                className="h-7 text-[10px] uppercase font-black text-indigo-400 hover:bg-indigo-500/10"
+                className="h-7 text-[10px] uppercase font-black text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/10"
               >
                 {isAddingPet ? "Cancel" : "Add Pet"}
               </Button>
             </div>
 
             {isAddingPet && (
-              <div className="grid grid-cols-3 gap-2 p-3 bg-indigo-600/5 border border-indigo-600/20 rounded-xl animate-in slide-in-from-top-2 duration-200">
+              <div className="grid grid-cols-4 gap-2 p-3 bg-indigo-50 dark:bg-indigo-600/5 border border-indigo-200 dark:border-indigo-600/20 rounded-xl animate-in slide-in-from-top-2 duration-200">
                 <input
                   placeholder="Pet Name"
-                  className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-indigo-500"
+                  className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500"
                   value={newPet.name}
                   onChange={(e) =>
                     setNewPet({ ...newPet, name: e.target.value })
                   }
                 />
                 <select
-                  className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-xs text-white cursor-pointer"
+                  className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-2 text-xs text-slate-900 dark:text-white cursor-pointer outline-none"
                   value={newPet.type}
                   onChange={(e) =>
                     setNewPet({ ...newPet, type: e.target.value })
@@ -287,10 +278,20 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
                   <option>Cat</option>
                   <option>Other</option>
                 </select>
+
+                <input
+                  placeholder="Breed"
+                  className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500"
+                  value={newPet.breed}
+                  onChange={(e) =>
+                    setNewPet({ ...newPet, breed: e.target.value })
+                  }
+                />
+
                 <Button
                   onClick={handleAddPet}
                   disabled={isUpdating}
-                  className="bg-indigo-600 hover:bg-indigo-500"
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white w-full"
                 >
                   {isUpdating ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
@@ -312,18 +313,18 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
               ) : clientPets.length > 0 ? (
                 clientPets.map((pet: any) => (
                   <button
-                    key={pet.$id} // Uses the REAL Appwrite document ID
-                    className="flex items-center p-4 bg-slate-950 border border-slate-800 rounded-2xl hover:border-indigo-500/50 hover:bg-slate-900 transition-all group text-left"
+                    key={pet.$id}
+                    className="flex items-center p-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl hover:border-indigo-500/50 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all group text-left shadow-sm"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setSelectedPet(pet); // This object now includes the $id for transactions
+                      setSelectedPet(pet);
                     }}
                   >
                     <div className="h-10 w-10 rounded-xl bg-pink-500/10 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
                       <PawPrint className="h-5 w-5 text-pink-500" />
                     </div>
                     <div>
-                      <p className="text-sm font-black text-slate-200 uppercase tracking-tight">
+                      <p className="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-tight">
                         {pet.name}
                       </p>
                       <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">
@@ -333,8 +334,8 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
                   </button>
                 ))
               ) : (
-                <div className="text-center py-10 border border-dashed border-slate-800 rounded-2xl">
-                  <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.2em]">
+                <div className="text-center py-10 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+                  <p className="text-[10px] text-slate-400 dark:text-slate-600 font-black uppercase tracking-[0.2em]">
                     No medical records found
                   </p>
                 </div>
@@ -344,7 +345,7 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-slate-800 bg-slate-950/50 flex justify-between items-center">
+        <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 flex justify-between items-center">
           {showDeleteConfirm && (
             <div className="flex items-center gap-2 text-red-500 text-[10px] font-black uppercase animate-pulse">
               <AlertTriangle className="h-4 w-4" /> Permanent Action
@@ -355,7 +356,7 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
               <Button
                 variant="ghost"
                 onClick={() => setShowDeleteConfirm(false)}
-                className="text-slate-400 text-xs font-bold uppercase"
+                className="text-slate-500 text-xs font-bold uppercase hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 Cancel
               </Button>
@@ -365,8 +366,8 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
               disabled={isDeleting}
               className={`h-11 px-6 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${
                 showDeleteConfirm
-                  ? "bg-red-600 hover:bg-red-500 shadow-[0_0_20px_rgba(220,38,38,0.2)]"
-                  : "bg-slate-800 text-slate-500 hover:text-red-500 border border-transparent hover:border-red-600/30"
+                  ? "bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-500/20"
+                  : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-500 border border-transparent"
               }`}
             >
               {isDeleting ? (
@@ -405,7 +406,7 @@ function EditableItem({
       {isEdit ? (
         isTextArea ? (
           <textarea
-            className="w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-sm text-white outline-none focus:border-indigo-500 transition-colors"
+            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-sm text-slate-900 dark:text-white outline-none focus:border-indigo-500 transition-colors"
             rows={3}
             value={value}
             onChange={(e) => onChange(e.target.value)}
@@ -413,13 +414,13 @@ function EditableItem({
         ) : (
           <input
             type={type}
-            className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-sm text-white outline-none focus:border-indigo-500 transition-colors"
+            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-sm text-slate-900 dark:text-white outline-none focus:border-indigo-500 transition-colors [color-scheme:light] dark:[color-scheme:dark]"
             value={value}
             onChange={(e) => onChange(e.target.value)}
           />
         )
       ) : (
-        <p className="text-sm text-slate-200 font-semibold">
+        <p className="text-sm text-slate-900 dark:text-slate-200 font-semibold">
           {value || "Not Provided"}
         </p>
       )}

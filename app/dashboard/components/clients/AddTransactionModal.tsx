@@ -3,16 +3,13 @@
 import { useState, useEffect } from "react";
 import {
   X,
-  Receipt,
-  Banknote,
   Calendar,
   Clock,
   Scale,
   Activity,
   CalendarDays,
   Plus,
-  CreditCard,
-  Wallet,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTransactionStore } from "@/app/store/useTransactionStore";
@@ -60,7 +57,7 @@ export default function AddTransactionModal({
       );
       setClinicalNotes(initialData.clinicalNotes || "");
       setCurrentWeight(initialData.recordedWeight || "");
-      setAmountPaid(""); // Usually reset for updates unless editing the specific installment
+      setAmountPaid("");
     } else if (isOpen) {
       setServiceName("");
       setTotalAmount("");
@@ -116,185 +113,202 @@ export default function AddTransactionModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-150 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+      {/* Dynamic Overlay */}
       <div
-        className="absolute inset-0 bg-slate-950/90 backdrop-blur-md"
+        className="absolute inset-0 bg-background/80 backdrop-blur-md dark:bg-slate-950/90"
         onClick={onClose}
       />
 
       <form
         onSubmit={handleSubmit}
-        className="relative w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-[3rem] p-8 shadow-2xl max-h-[95vh] overflow-y-auto custom-scrollbar"
+        className="relative w-full max-w-4xl bg-card border border-border rounded-[2.5rem] p-6 md:p-10 shadow-2xl max-h-[95vh] overflow-y-auto custom-scrollbar transition-colors"
       >
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-10">
+          <div className="flex items-center gap-5">
             <div
-              className={`h-12 w-12 rounded-2xl flex items-center justify-center ${
-                initialData ? "bg-amber-500/20" : "bg-indigo-600"
+              className={`h-14 w-14 rounded-2xl flex items-center justify-center shadow-sm ${
+                initialData
+                  ? "bg-amber-100 dark:bg-amber-500/10 text-amber-600"
+                  : "bg-indigo-600 text-white"
               }`}
             >
-              {initialData ? (
-                <Activity className="text-amber-500" />
-              ) : (
-                <Plus className="text-white" />
-              )}
+              {initialData ? <Activity size={28} /> : <Plus size={28} />}
             </div>
             <div>
-              <h4 className="text-xl font-black text-white uppercase italic tracking-tighter">
+              <h4 className="text-2xl font-black text-foreground uppercase italic tracking-tighter">
                 {initialData ? "Modify Clinical Entry" : "New Visit Entry"}
               </h4>
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                Patient: {pet.name}
+              <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-[0.2em]">
+                Patient:{" "}
+                <span className="text-indigo-600 dark:text-indigo-400">
+                  {pet.name}
+                </span>
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-3 hover:bg-slate-800 rounded-2xl text-slate-400 transition-colors"
+            className="p-3 hover:bg-muted rounded-2xl text-muted-foreground transition-colors"
           >
-            <X size={20} />
+            <X size={24} />
           </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-          {/* LEFT: CLINICAL STATUS */}
+          {/* LEFT: MEDICAL SECTION */}
           <div className="space-y-6">
-            <h5 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2">
+            <h5 className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+              <span className="h-px w-8 bg-current opacity-30" />
               Medical Status
             </h5>
+
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[9px] font-black text-slate-500 uppercase ml-1">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-muted-foreground uppercase ml-1">
                   Visit Date
                 </label>
-                <div className="relative">
-                  <CalendarDays className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                <div className="relative group">
+                  <CalendarDays className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-indigo-600 transition-colors" />
                   <input
                     type="date"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-white text-xs outline-none focus:border-emerald-500 scheme-dark"
+                    className="w-full bg-muted/50 border border-border rounded-2xl py-4 pl-12 pr-4 text-foreground text-sm outline-none focus:border-indigo-600 transition-all dark:scheme-dark"
                     value={customDate}
                     onChange={(e) => setCustomDate(e.target.value)}
                   />
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[9px] font-black text-slate-500 uppercase ml-1">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-muted-foreground uppercase ml-1">
                   Weight (kg)
                 </label>
-                <div className="relative">
-                  <Scale className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                <div className="relative group">
+                  <Scale className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-indigo-600 transition-colors" />
                   <input
                     type="number"
                     step="0.1"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-white text-sm outline-none focus:border-emerald-500"
+                    className="w-full bg-muted/50 border border-border rounded-2xl py-4 pl-12 pr-4 text-foreground text-sm outline-none focus:border-indigo-600 transition-all"
                     value={currentWeight}
                     onChange={(e) => setCurrentWeight(e.target.value)}
                   />
                 </div>
               </div>
             </div>
-            <textarea
-              placeholder="Clinical findings & observations..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-3xl py-4 px-6 text-white text-sm outline-none focus:border-emerald-500 min-h-[220px] resize-none"
-              value={clinicalNotes}
-              onChange={(e) => setClinicalNotes(e.target.value)}
-            />
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-muted-foreground uppercase ml-1">
+                Clinical Notes
+              </label>
+              <textarea
+                placeholder="Clinical findings & observations..."
+                className="w-full bg-muted/50 border border-border rounded-3xl py-5 px-6 text-foreground text-sm outline-none focus:border-indigo-600 min-h-[220px] resize-none transition-all"
+                value={clinicalNotes}
+                onChange={(e) => setClinicalNotes(e.target.value)}
+              />
+            </div>
           </div>
 
-          {/* RIGHT: BILLING & PAYMENT */}
+          {/* RIGHT: BILLING SECTION */}
           <div className="space-y-6">
-            <h5 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+            <h5 className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+              <span className="h-px w-8 bg-current opacity-30" />
               Billing Details
             </h5>
+
             <div className="space-y-4">
               <input
                 required
-                placeholder="Service/Procedure Name"
-                className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 px-6 text-white text-sm outline-none focus:border-indigo-500"
+                placeholder="Service / Procedure Name"
+                className="w-full bg-muted/50 border border-border rounded-2xl py-4 px-6 text-foreground text-sm outline-none focus:border-indigo-600 transition-all"
                 value={serviceName}
                 onChange={(e) => setServiceName(e.target.value)}
               />
-              <div className="relative">
-                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-bold">
+              <div className="relative group">
+                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-indigo-600 font-black text-lg">
                   ₱
                 </span>
                 <input
                   required
                   type="number"
                   placeholder="Total Cost"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-6 text-white text-sm font-black outline-none focus:border-indigo-500"
+                  className="w-full bg-muted/50 border border-border rounded-2xl py-5 pl-12 pr-6 text-foreground text-xl font-black outline-none focus:border-indigo-600 transition-all"
                   value={totalAmount}
                   onChange={(e) => setTotalAmount(e.target.value)}
                 />
               </div>
             </div>
 
-            {/* PAYMENT TYPE SELECTOR */}
-            <div className="grid grid-cols-2 gap-2 p-1.5 bg-slate-950 border border-slate-800 rounded-2xl">
+            {/* TAB SWITCHER */}
+            <div className="grid grid-cols-2 gap-2 p-1.5 bg-muted/50 border border-border rounded-2xl">
               <button
                 type="button"
                 onClick={() => setPaymentType("Full")}
                 className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                   paymentType === "Full"
-                    ? "bg-indigo-600 text-white shadow-lg"
-                    : "text-slate-500 hover:text-slate-300"
+                    ? "bg-indigo-600 text-white shadow-md"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Full Paid
+                Fully Paid
               </button>
               <button
                 type="button"
                 onClick={() => setPaymentType("Installment")}
                 className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                   paymentType === "Installment"
-                    ? "bg-indigo-600 text-white shadow-lg"
-                    : "text-slate-500 hover:text-slate-300"
+                    ? "bg-indigo-600 text-white shadow-md"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 Partial/Terms
               </button>
             </div>
 
-            {/* CONDITIONAL INSTALLMENT FIELDS */}
+            {/* INSTALLMENT BOX */}
             {paymentType === "Installment" && !initialData && (
-              <div className="space-y-4 p-5 bg-indigo-600/5 border border-indigo-500/10 rounded-3xl animate-in fade-in slide-in-from-top-2">
+              <div className="space-y-4 p-6 bg-indigo-50/50 dark:bg-indigo-600/5 border border-indigo-100 dark:border-indigo-500/10 rounded-3xl animate-in fade-in slide-in-from-top-2 duration-300">
                 <div className="space-y-1.5">
-                  <label className="text-[9px] font-black text-indigo-400 uppercase ml-1">
+                  <label className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase ml-1">
                     Initial Deposit (₱)
                   </label>
                   <input
                     type="number"
                     placeholder="Amount paid today"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 text-white text-sm outline-none focus:border-indigo-500"
+                    className="w-full bg-background border border-border rounded-xl py-3 px-4 text-foreground text-sm outline-none focus:border-indigo-600 transition-all"
                     value={amountPaid}
                     onChange={(e) => setAmountPaid(e.target.value)}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[9px] font-black text-indigo-400 uppercase ml-1">
+                  <label className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase ml-1">
                     Payment Method
                   </label>
-                  <select
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 text-white text-xs outline-none focus:border-indigo-500"
-                    value={paymentMethod}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                  >
-                    <option value="Cash">Cash</option>
-                    <option value="GCash">GCash</option>
-                    <option value="Card">Bank Card</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      className="w-full bg-background border border-border rounded-xl py-3 px-4 text-foreground text-xs outline-none focus:border-indigo-600 appearance-none cursor-pointer transition-all"
+                      value={paymentMethod}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                    >
+                      <option value="Cash">Cash</option>
+                      <option value="GCash">GCash</option>
+                      <option value="Card">Bank Card</option>
+                    </select>
+                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
+                  </div>
                 </div>
               </div>
             )}
 
-            <div className="p-6 bg-slate-950 border border-slate-800 rounded-4xl space-y-3">
-              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                <Clock size={12} /> Next Appointment
+            {/* FOLLOW UP */}
+            <div className="p-6 bg-muted/30 border border-border rounded-[2rem] space-y-3">
+              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                <Clock size={14} className="text-indigo-600" /> Next Appointment
               </label>
               <input
                 type="date"
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl py-3 px-4 text-white text-xs outline-none scheme-dark focus:border-indigo-500"
+                className="w-full bg-background border border-border rounded-xl py-3 px-4 text-foreground text-sm outline-none focus:border-indigo-600 transition-all dark:scheme-dark"
                 value={nextAppointment}
                 onChange={(e) => setNextAppointment(e.target.value)}
               />
@@ -302,10 +316,11 @@ export default function AddTransactionModal({
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-slate-800">
+        {/* Footer Action */}
+        <div className="mt-10 pt-8 border-t border-border">
           <Button
             type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-500 h-16 rounded-3xl font-black uppercase text-xs tracking-[0.3em] shadow-xl shadow-indigo-900/20 transition-all"
+            className="w-full bg-indigo-600 hover:bg-indigo-500 h-16 md:h-20 rounded-[2rem] font-black uppercase text-xs md:text-sm tracking-[0.3em] shadow-xl shadow-indigo-600/20 transition-all active:scale-[0.98]"
           >
             {initialData ? "Update Medical Record" : "Confirm & Save Visit"}
           </Button>

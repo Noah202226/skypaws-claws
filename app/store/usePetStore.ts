@@ -37,6 +37,8 @@ interface PetState {
 
   // Actions
   createPet: (data: Omit<Pet, "$id">) => Promise<void>;
+  deletePet: (petId: string) => Promise<void>;
+
   addTransaction: (data: Omit<Transaction, "$id">) => Promise<void>;
   updateTransactionPayment: (
     id: string,
@@ -67,7 +69,8 @@ export const usePetStore = create<PetState>()(
         try {
           const response = await databases.listDocuments(
             DATABASE_ID!,
-            PETS_COLLECTION_ID
+            PETS_COLLECTION_ID,
+            [Query.limit(1000)]
           );
           set({ allPets: response.documents as unknown as Pet[] });
         } catch (error) {
@@ -112,6 +115,29 @@ export const usePetStore = create<PetState>()(
           }));
         } catch (error) {
           console.error("Create pet error:", error);
+          throw error;
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      deletePet: async (petId: string) => {
+        set({ isLoading: true });
+        try {
+          // Delete from Appwrite
+          await databases.deleteDocument(
+            DATABASE_ID!,
+            PETS_COLLECTION_ID,
+            petId
+          );
+
+          // Update local state: remove from allPets and clientPets
+          set((state) => ({
+            allPets: state.allPets.filter((p) => p.$id !== petId),
+            clientPets: state.clientPets.filter((p) => p.$id !== petId),
+          }));
+        } catch (error) {
+          console.error("Error deleting pet:", error);
           throw error;
         } finally {
           set({ isLoading: false });
