@@ -414,7 +414,7 @@ function EditableItem({
         ) : (
           <input
             type={type}
-            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-sm text-slate-900 dark:text-white outline-none focus:border-indigo-500 transition-colors [color-scheme:light] dark:[color-scheme:dark]"
+            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-sm text-slate-900 dark:text-white outline-none focus:border-indigo-500 transition-colors scheme-light dark:scheme-dark"
             value={value}
             onChange={(e) => onChange(e.target.value)}
           />

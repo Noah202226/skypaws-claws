@@ -113,7 +113,7 @@ export default function AddTransactionModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-150 flex items-center justify-center p-4">
       {/* Dynamic Overlay */}
       <div
         className="absolute inset-0 bg-background/80 backdrop-blur-md dark:bg-slate-950/90"
@@ -302,7 +302,7 @@ export default function AddTransactionModal({
             )}
 
             {/* FOLLOW UP */}
-            <div className="p-6 bg-muted/30 border border-border rounded-[2rem] space-y-3">
+            <div className="p-6 bg-muted/30 border border-border rounded-4xl space-y-3">
               <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
                 <Clock size={14} className="text-indigo-600" /> Next Appointment
               </label>
@@ -320,7 +320,7 @@ export default function AddTransactionModal({
         <div className="mt-10 pt-8 border-t border-border">
           <Button
             type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-500 h-16 md:h-20 rounded-[2rem] font-black uppercase text-xs md:text-sm tracking-[0.3em] shadow-xl shadow-indigo-600/20 transition-all active:scale-[0.98]"
+            className="w-full bg-indigo-600 hover:bg-indigo-500 h-16 md:h-20 rounded-4xl font-black uppercase text-xs md:text-sm tracking-[0.3em] shadow-xl shadow-indigo-600/20 transition-all active:scale-[0.98]"
           >
             {initialData ? "Update Medical Record" : "Confirm & Save Visit"}
           </Button>

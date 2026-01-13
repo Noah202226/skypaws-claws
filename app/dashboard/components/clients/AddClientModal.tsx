@@ -196,7 +196,7 @@ export default function AddClientModal({ isOpen, onClose }: Props) {
                   onChange={(e) =>
                     setFormData({ ...formData, birthdate: e.target.value })
                   }
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-600 transition-all [color-scheme:light] dark:[color-scheme:dark]"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-600 transition-all scheme-light dark:scheme-dark"
                 />
               </div>
               <div className="space-y-1">

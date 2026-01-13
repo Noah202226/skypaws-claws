@@ -21,6 +21,7 @@ import PetDetailModal from "./clients/PetDetailModal";
 import { formatDate } from "./utils/dateFormatter";
 import { usePetStore } from "@/app/store/usePetStore";
 import { Pet } from "@/app/types/index";
+import AppointmentReminders from "../AppointmentReminders";
 
 export default function ClientsSection() {
   const {
