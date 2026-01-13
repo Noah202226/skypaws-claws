@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/app/context/auth-context";
 import Sidebar from "@/app/dashboard/components/Sidebar";
 import Header from "@/app/dashboard/components/Header";
@@ -21,12 +21,19 @@ export default function Dashboard() {
   // --- THEME LOGIC START ---
   const [theme, setTheme] = useState<"light" | "dark">("dark");
 
-  const { fetchTransactions } = useTransactionStore(); // 1. Pull the fetch function
+  const { fetchTransactions, transactions } = useTransactionStore(); // 1. Pull the fetch function
 
   useEffect(() => {
     // 2. Trigger the fetch when the dashboard first opens
     fetchTransactions();
   }, [fetchTransactions]);
+
+  const appointmentCount = useMemo(() => {
+    const now = new Date();
+    return transactions.filter(
+      (tx) => tx.nextAppointmentDate && new Date(tx.nextAppointmentDate) >= now
+    ).length;
+  }, [transactions]);
 
   useEffect(() => {
     // Check local storage or system on mount

@@ -9,7 +9,6 @@ interface HeaderProps {
   setIsMobileMenuOpen: (open: boolean) => void;
   theme: "light" | "dark";
   toggleTheme: () => void;
-  notificationCount: number;
 }
 
 export default function Header({
@@ -17,7 +16,6 @@ export default function Header({
   setIsMobileMenuOpen,
   theme,
   toggleTheme,
-  notificationCount,
 }: HeaderProps) {
   const pathname = usePathname();
 
