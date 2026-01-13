@@ -15,7 +15,7 @@ import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "./context/auth-context";
 import { Toaster } from "sonner";
 
-const APP_NAME = "PWA Template";
+const APP_NAME = "VET CLINIC";
 const APP_DEFAULT_TITLE = "Sky Paws and Claws";
 const APP_TITLE_TEMPLATE = "%s - PWA App";
 const APP_DESCRIPTION = "Best PWA template in the world!";

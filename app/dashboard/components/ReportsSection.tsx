@@ -21,10 +21,12 @@ import { useTransactionStore } from "@/app/store/useTransactionStore";
 import { usePetStore } from "@/app/store/usePetStore";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import { useClientStore } from "@/app/store/useClientStore";
 
 export default function ReportsSection() {
   const { transactions, fetchTransactions } = useTransactionStore();
   const { allPets, fetchAllPets } = usePetStore();
+  const { clients, fetchClients } = useClientStore();
 
   const [startDate, setStartDate] = useState(() => {
     const now = new Date();
@@ -45,15 +47,17 @@ export default function ReportsSection() {
   useEffect(() => {
     fetchTransactions();
     fetchAllPets();
-  }, [fetchTransactions, fetchAllPets]);
+    fetchClients();
+  }, [fetchTransactions, fetchAllPets, fetchClients]);
 
-  const petMap = useMemo(() => {
+  const clientMap = useMemo(() => {
     const map: Record<string, string> = {};
-    allPets.forEach((pet) => {
-      map[pet.$id] = pet.name;
+    clients.forEach((client) => {
+      // Maps the ID (e.g., 6964EC...) to the Name (e.g., John Doe)
+      map[client.$id] = client.name;
     });
     return map;
-  }, [allPets]);
+  }, [clients]);
 
   const { metrics, monthlyData, serviceStats, topDebtors, customerKPIs } =
     useMemo(() => {
@@ -141,18 +145,27 @@ export default function ReportsSection() {
         .map(([name, revenue]: any) => ({ name, revenue }))
         .sort((a, b) => b.revenue - a.revenue);
 
-      const customerAgg: Record<string, { name: string; debt: number }> = {};
+      const clientAgg: Record<string, { name: string; debt: number }> = {};
+
       filtered.forEach((tx) => {
-        const petName = petMap[tx.petId] || "Unknown Pet";
-        if (!customerAgg[petName])
-          customerAgg[petName] = { name: petName, debt: 0 };
-        customerAgg[petName].debt += Number(tx.balanceRemaining) || 0;
+        // If tx.clientId exists, use it to get the name from our map
+        // Otherwise, fallback to "Unknown Client"
+        const clientId = tx.clientName;
+        const clientName = clientId
+          ? clientMap[clientId] || "Unknown Client"
+          : "Unknown Client";
+
+        if (!clientAgg[clientName]) {
+          clientAgg[clientName] = { name: clientName, debt: 0 };
+        }
+
+        clientAgg[clientName].debt += Number(tx.balanceRemaining) || 0;
       });
 
-      const sortedDebtors = Object.values(customerAgg)
+      const sortedDebtors = Object.values(clientAgg)
         .filter((c) => c.debt > 0)
         .sort((a, b) => b.debt - a.debt)
-        .slice(0, 3);
+        .slice(0, 3); // Top 3 highest owing clients
 
       return {
         metrics: {
@@ -174,7 +187,7 @@ export default function ReportsSection() {
         serviceStats: services,
         topDebtors: sortedDebtors,
       };
-    }, [transactions, startDate, endDate, petMap]);
+    }, [transactions, startDate, endDate, clientMap]);
 
   const handleExportExcel = async () => {
     /* Same logic as before */
@@ -326,24 +339,39 @@ export default function ReportsSection() {
               <AlertCircle className="w-3 h-3" /> Highest Unpaid
             </h3>
             <div className="space-y-3">
-              {topDebtors.map((c, i) => (
+              {topDebtors.map((client, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-red-100 dark:border-red-500/10"
+                  className="flex items-center justify-between p-4 bg-slate-900/50 rounded-2xl border border-slate-800 hover:border-indigo-600/30 transition-all group"
                 >
                   <div className="flex flex-col">
-                    <span className="text-[11px] font-black text-slate-900 dark:text-white uppercase">
-                      {c.name}
+                    <span className="text-[11px] font-black text-white uppercase italic tracking-tight group-hover:text-indigo-400 transition-colors">
+                      {client.name}{" "}
+                      {/* This will now show "John Doe" instead of the ID */}
                     </span>
-                    <span className="text-[8px] text-red-500 font-bold uppercase">
-                      Pending Balance
+                    <span className="text-[8px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">
+                      Total Family Balance
                     </span>
                   </div>
-                  <span className="text-[11px] font-black text-red-600 dark:text-red-400 font-mono">
-                    ₱{c.debt.toLocaleString()}
-                  </span>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[12px] font-bold text-rose-500 font-mono">
+                      ₱{client.debt.toLocaleString()}
+                    </span>
+                    {client.debt > 5000 && (
+                      <span className="text-[7px] bg-rose-500/10 text-rose-500 px-1.5 py-0.5 rounded mt-1 font-black uppercase">
+                        High Priority
+                      </span>
+                    )}
+                  </div>
                 </div>
               ))}
+              {topDebtors.length === 0 && (
+                <div className="text-center py-6">
+                  <p className="text-[10px] text-slate-600 font-black uppercase">
+                    No outstanding balances
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 

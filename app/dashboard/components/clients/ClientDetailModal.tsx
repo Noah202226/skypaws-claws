@@ -38,6 +38,7 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [isShaking, setIsShaking] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { updateClient, deleteClient } = useClientStore();
   const { clientPets, fetchPetsByClient, isPetsLoading, createPet } =
@@ -423,21 +424,35 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
               </p>
 
               <div className="w-full space-y-4">
-                <input
-                  type="password"
-                  name="security-auth-challenge" // Unique name
-                  autoComplete="new-password"
-                  placeholder="Enter security password"
-                  className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-2xl py-4 px-6 text-sm text-center font-bold tracking-widest outline-none transition-all dark:text-white ${
-                    isShaking
-                      ? "border-rose-500 animate-shake ring-4 ring-rose-500/10"
-                      : "border-slate-200 dark:border-slate-800 focus:border-rose-500"
-                  }`}
-                  value={deletePassword}
-                  onChange={(e) => setDeletePassword(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleDeleteClient()}
-                  autoFocus
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="security-auth-challenge" // Unique name
+                    autoComplete="new-password"
+                    placeholder="Enter security password"
+                    className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-2xl py-4 px-6 text-sm text-center font-bold tracking-widest outline-none transition-all dark:text-white ${
+                      isShaking
+                        ? "border-rose-500 animate-shake ring-4 ring-rose-500/10"
+                        : "border-slate-200 dark:border-slate-800 focus:border-rose-500"
+                    }`}
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleDeleteClient()}
+                    autoFocus
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-indigo-500 transition-colors"
+                  >
+                    {showPassword ? (
+                      <Check className="h-4 w-4 text-green-500" /> // Use check to show it's revealed
+                    ) : (
+                      <Edit2 className="h-4 w-4" /> // Using your existing Edit2 icon as a placeholder or import 'Eye'
+                    )}
+                  </button>
+                </div>
 
                 <div className="grid grid-cols-2 gap-3 pt-2">
                   <Button

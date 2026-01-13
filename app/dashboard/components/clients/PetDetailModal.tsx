@@ -17,6 +17,8 @@ import {
   CalendarClock,
   ArrowUpRight,
   CreditCard,
+  Check,
+  Edit2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTransactionStore } from "@/app/store/useTransactionStore";
@@ -120,6 +122,7 @@ export default function PetDetailModal({ pet, isOpen, onClose }: any) {
     }
   };
 
+  const [showPassword, setShowPassword] = useState(false);
   const handleDeletePet = async () => {
     if (deletePassword !== "123GHouls@#") {
       setIsShaking(true);
@@ -319,7 +322,7 @@ export default function PetDetailModal({ pet, isOpen, onClose }: any) {
                                 <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-1">
                                   Clinical Findings
                                 </p>
-                                <p className="text-sm line-clamp-2 hover:line-clamp-none transition-all cursor-pointer whitespace-pre-wrap wrap-break-word">
+                                <p className="text-sm  transition-all cursor-pointer whitespace-pre-wrap wrap-break-word">
                                   {tx.clinicalNotes}
                                 </p>
                               </div>
@@ -554,10 +557,16 @@ export default function PetDetailModal({ pet, isOpen, onClose }: any) {
         <div className="fixed inset-0 z-100 flex items-center justify-center p-6">
           <div
             className="absolute inset-0 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300"
-            onClick={() => setIsDeleteConfirmOpen(false)}
+            onClick={() => {
+              setIsDeleteConfirmOpen(false);
+              setDeletePassword("");
+              setShowPassword(false);
+            }}
           />
 
           <div className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-rose-500/20 rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+            {/* 🛡️ ANTI-AUTOFILL HONEYPOT */}
+
             <div className="flex flex-col items-center text-center">
               <div className="h-20 w-20 rounded-3xl bg-rose-500/10 flex items-center justify-center mb-6">
                 <Trash2 className="h-10 w-10 text-rose-500" />
@@ -577,7 +586,7 @@ export default function PetDetailModal({ pet, isOpen, onClose }: any) {
               <div className="w-full space-y-4">
                 <div className="relative">
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     name="security-auth-challenge" // Unique name
                     autoComplete="new-password"
                     placeholder="Enter security password"
@@ -590,6 +599,18 @@ export default function PetDetailModal({ pet, isOpen, onClose }: any) {
                     onChange={(e) => setDeletePassword(e.target.value)}
                     autoFocus
                   />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-indigo-500 transition-colors"
+                  >
+                    {showPassword ? (
+                      <Check className="h-4 w-4 text-green-500" /> // Use check to show it's revealed
+                    ) : (
+                      <Edit2 className="h-4 w-4" /> // Using your existing Edit2 icon as a placeholder or import 'Eye'
+                    )}
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 pt-2">

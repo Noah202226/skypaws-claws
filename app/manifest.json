@@ -11,7 +11,7 @@
     {
       "purpose": "any",
       "sizes": "512x512",
-      "src": "icon512_rounded.png",
+      "src": "icon512_maskable.png",
       "type": "image/png"
     }
   ],
@@ -19,8 +19,8 @@
   "display": "standalone",
   "dir": "auto",
   "lang": "en-US",
-  "name": "PWA TEMPLATE",
-  "short_name": "PWA",
+  "name": "VET CLINIC",
+  "short_name": "VET",
   "start_url": "/",
   "scope": "/"
 }
