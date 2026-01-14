@@ -34,10 +34,10 @@ export default function Home() {
           </div>
           <div className="flex flex-col">
             <span className="text-xl font-black leading-none tracking-tight">
-              SKY PAWS
+              SKY PAWS AND CLAWS
             </span>
             <span className="text-[10px] font-bold text-blue-500 tracking-[0.2em]">
-              CLINIC & CLAWS
+              Veterinary Clinic
             </span>
           </div>
         </div>
