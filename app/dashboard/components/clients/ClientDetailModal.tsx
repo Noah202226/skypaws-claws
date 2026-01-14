@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { ClientData, Pet } from "@/app/types/index";
 import { useClientStore } from "@/app/store/useClientStore";
 import { usePetStore } from "@/app/store/usePetStore";
+// 1. Import the Transaction Store
+import { useTransactionStore } from "@/app/store/useTransactionStore";
 import { toast } from "sonner";
 import {
   X,
@@ -41,8 +43,13 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
   const [showPassword, setShowPassword] = useState(false);
 
   const { updateClient, deleteClient } = useClientStore();
-  const { clientPets, fetchPetsByClient, isPetsLoading, createPet } =
+  // 2. Destructure deletePet from usePetStore
+  const { clientPets, fetchPetsByClient, isPetsLoading, createPet, deletePet } =
     usePetStore();
+
+  // 3. Get transaction tools
+  const { transactions, fetchTransactions, deleteTransaction } =
+    useTransactionStore();
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [isAddingPet, setIsAddingPet] = useState(false);
@@ -73,8 +80,10 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
         address: client.address || "",
       });
       fetchPetsByClient(client.$id);
+      // 4. Ensure we have transactions loaded so we can find which ones to delete
+      fetchTransactions();
     }
-  }, [client, isOpen, fetchPetsByClient]);
+  }, [client, isOpen, fetchPetsByClient, fetchTransactions]);
 
   if (!isOpen || !client) return null;
 
@@ -106,8 +115,8 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
     }
   };
 
+  // --- UPDATED DELETE LOGIC ---
   const handleDeleteClient = async () => {
-    // Replace 'your_password_here' with your desired secret or a variable from env
     if (deletePassword !== "123GHouls@#") {
       setIsShaking(true);
       toast.error("Invalid Security Password");
@@ -117,24 +126,51 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
 
     setIsDeleting(true);
     try {
+      // STEP 1: Identify all pets belonging to this client
+      // clientPets is already populated by the useEffect logic
+      const petsToDelete = clientPets;
+
+      // STEP 2: Find and Delete Transactions for these pets
+      // We filter the global transaction list for any transaction matching our pets' IDs
+      const petIds = petsToDelete.map((p) => p.$id);
+
+      const transactionsToDelete = transactions.filter((tx) =>
+        petIds.includes(tx.petId)
+      );
+
+      // Delete transactions concurrently
+      if (transactionsToDelete.length > 0) {
+        await Promise.all(
+          transactionsToDelete.map((tx) => deleteTransaction(tx.$id))
+        );
+      }
+
+      // STEP 3: Delete the Pets
+      if (petsToDelete.length > 0) {
+        await Promise.all(petsToDelete.map((pet) => deletePet(pet.$id)));
+      }
+
+      // STEP 4: Finally, Delete the Client
       await deleteClient(client.$id);
 
-      // Refresh global states so the sidebar updates
+      // STEP 5: Refresh Global State
       await Promise.all([
         usePetStore.getState().fetchAllPets(true),
         useClientStore.getState().fetchClients(true),
-        // If you have a transaction store, refresh it here too
+        useTransactionStore.getState().fetchTransactions(),
       ]);
 
-      toast.error("Client record eradicated successfully");
+      toast.success("Client and all associated records wiped.");
       setIsDeleteConfirmOpen(false);
       onClose();
     } catch (err) {
-      toast.error("Failed to delete client");
+      console.error(err);
+      toast.error("Failed to delete client or associated records.");
     } finally {
       setIsDeleting(false);
     }
   };
+  // ----------------------------
 
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
@@ -295,15 +331,6 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
                   <option>Other</option>
                 </select>
 
-                {/* <input
-                  placeholder="Breed"
-                  className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500"
-                  value={newPet.breed}
-                  onChange={(e) =>
-                    setNewPet({ ...newPet, breed: e.target.value })
-                  }
-                /> */}
-
                 <Button
                   onClick={handleAddPet}
                   disabled={isUpdating}
@@ -378,7 +405,7 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
               </Button>
             )}
             <Button
-              onClick={() => setIsDeleteConfirmOpen(true)} // Opens the password modal
+              onClick={() => setIsDeleteConfirmOpen(true)}
               disabled={isDeleting}
               className="h-11 px-6 text-[10px] font-black uppercase tracking-widest rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-500 hover:text-red-600 transition-all"
             >
@@ -427,7 +454,7 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
-                    name="security-auth-challenge" // Unique name
+                    name="security-auth-challenge"
                     autoComplete="new-password"
                     placeholder="Enter security password"
                     className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-2xl py-4 px-6 text-sm text-center font-bold tracking-widest outline-none transition-all dark:text-white ${
@@ -447,9 +474,9 @@ export default function ClientDetailModal({ client, isOpen, onClose }: Props) {
                     className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-indigo-500 transition-colors"
                   >
                     {showPassword ? (
-                      <Check className="h-4 w-4 text-green-500" /> // Use check to show it's revealed
+                      <Check className="h-4 w-4 text-green-500" />
                     ) : (
-                      <Edit2 className="h-4 w-4" /> // Using your existing Edit2 icon as a placeholder or import 'Eye'
+                      <Edit2 className="h-4 w-4" />
                     )}
                   </button>
                 </div>
