@@ -242,7 +242,7 @@ export default function SettingsSection() {
               subtitle="Standardized breed lists"
             /> */}
 
-            <DangerZone />
+            {/* <DangerZone /> */}
           </div>
         </div>
       </div>
