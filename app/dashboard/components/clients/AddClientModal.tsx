@@ -261,7 +261,6 @@ export default function AddClientModal({ isOpen, onClose }: Props) {
                   Type
                 </label>
                 <select
-                  required
                   value={formData.petType}
                   onChange={(e) =>
                     setFormData({

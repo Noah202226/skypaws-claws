@@ -58,10 +58,10 @@ export default function Sidebar({
           </div>
           <div className="flex flex-col">
             <span className="font-black text-sm leading-none tracking-tight italic text-slate-900 dark:text-white">
-              SKY PAWS
+              SKY PAWS AND CLAWS
             </span>
             <span className="text-[9px] font-bold text-indigo-600 dark:text-blue-500 tracking-widest uppercase mt-0.5">
-              Clinic & Claws
+              VETERINARY CLINIC
             </span>
           </div>
         </div>
