@@ -134,15 +134,33 @@ export default function PetDetailModal({ pet, isOpen, onClose }: any) {
     }
 
     try {
+      // ---------------------------------------------------------
+      // STEP 1: Clean up "Orphans" (Transactions & Appointments)
+      // ---------------------------------------------------------
+      if (transactions && transactions.length > 0) {
+        // We map through all loaded transactions for this pet and delete them
+        // using Promise.all to do it faster (in parallel)
+        const deletePromises = transactions.map((tx: any) =>
+          deleteTransaction(tx.$id)
+        );
+
+        await Promise.all(deletePromises);
+        toast.info("Cleaning up medical records...");
+      }
+
+      // ---------------------------------------------------------
+      // STEP 2: Delete the Pet Profile
+      // ---------------------------------------------------------
       await deletePet(pet.$id);
-      toast.success("Patient profile deleted successfully");
+
+      toast.success("Patient profile and all records deleted successfully");
       setIsDeleteConfirmOpen(false);
       onClose();
     } catch (error) {
-      toast.error("Failed to delete pet profile");
+      console.error(error);
+      toast.error("Failed to delete pet profile or associated records");
     }
   };
-
   if (!isOpen || !pet) return null;
 
   return (

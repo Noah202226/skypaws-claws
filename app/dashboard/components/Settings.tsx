@@ -17,6 +17,7 @@ import {
   Loader2,
   Save,
 } from "lucide-react";
+import DangerZone from "../DangerZone";
 
 // --- Sub-Component: Service Manager ---
 function ServiceManager({ title, collectionId, showPrice, onBack }: any) {
@@ -240,6 +241,8 @@ export default function SettingsSection() {
               title="Breed Registry"
               subtitle="Standardized breed lists"
             /> */}
+
+            <DangerZone />
           </div>
         </div>
       </div>
