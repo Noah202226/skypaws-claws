@@ -25,16 +25,39 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     try {
       const res = await databases.listDocuments(DATABASE_ID!, colId, [
         Query.orderAsc("name"),
+        Query.limit(1000),
       ]);
       set({ items: res.documents as any });
     } finally {
       set({ isLoading: false });
     }
   },
+  // Tip: Adding a local state update after adding/removing items
+  // makes the UI feel much faster!
   addItem: async (colId, data) => {
-    await databases.createDocument(DATABASE_ID!, colId, ID.unique(), data);
+    try {
+      const newItem = await databases.createDocument(
+        DATABASE_ID!,
+        colId,
+        ID.unique(),
+        data,
+      );
+      set((state) => ({
+        items: [...state.items, newItem as any].sort((a, b) =>
+          a.name.localeCompare(b.name),
+        ),
+      }));
+    } catch (error) {
+      console.error("Error adding setting:", error);
+    }
   },
+
   removeItem: async (colId, docId) => {
-    await databases.deleteDocument(DATABASE_ID!, colId, docId);
+    try {
+      await databases.deleteDocument(DATABASE_ID!, colId, docId);
+      set((state) => ({ items: state.items.filter((i) => i.$id !== docId) }));
+    } catch (error) {
+      console.error("Error removing setting:", error);
+    }
   },
 }));

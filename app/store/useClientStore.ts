@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { databases, DATABASE_ID } from "@/lib/appwrite";
-import { ID } from "appwrite";
+import { ID, Query } from "appwrite";
 
 import { ClientData } from "../types/index";
 
@@ -13,6 +13,9 @@ interface ClientState {
   selectedClient: ClientData | null;
   searchQuery: string;
   isLoading: boolean;
+  lastId: string | null;
+  hasMore: boolean;
+  loadMoreClients: () => Promise<void>;
 
   // Fetching
   fetchClients: (force?: boolean) => Promise<void>;
@@ -21,7 +24,7 @@ interface ClientState {
   addClient: (data: any) => Promise<void>;
   updateClient: (
     id: string,
-    data: Partial<Omit<ClientData, "$id" | "$createdAt">>
+    data: Partial<Omit<ClientData, "$id" | "$createdAt">>,
   ) => Promise<void>;
   deleteClient: (id: string) => Promise<void>;
 
@@ -41,22 +44,65 @@ export const useClientStore = create<ClientState>()(
       searchQuery: "",
       isLoading: false,
 
+      lastId: null,
+      hasMore: false,
+
       fetchClients: async (force = false) => {
         const isBackgroundFetch = get().clients.length > 0;
-
         if (isBackgroundFetch) set({ isSyncing: true });
         else set({ isLoading: true });
 
         try {
           const response = await databases.listDocuments(
             DATABASE_ID!,
-            CLIENT_COLLECTION_ID
+            CLIENT_COLLECTION_ID,
+            [
+              Query.limit(50), // MATCH THE PAGINATION LIMIT
+              Query.orderDesc("$createdAt"),
+            ],
           );
-          set({ clients: response.documents as unknown as ClientData[] });
+
+          const docs = response.documents as unknown as ClientData[];
+          set({
+            clients: docs,
+            lastId: docs.length > 0 ? docs[docs.length - 1].$id : null,
+            hasMore: docs.length === 50, // If we hit 50, there's likely more
+          });
         } catch (error) {
           console.error("Error fetching clients:", error);
         } finally {
           set({ isSyncing: false, isLoading: false });
+        }
+      },
+
+      loadMoreClients: async () => {
+        const { lastId, clients, hasMore } = get();
+        if (!lastId || !hasMore) return;
+
+        set({ isSyncing: true });
+        try {
+          const response = await databases.listDocuments(
+            DATABASE_ID!,
+            CLIENT_COLLECTION_ID,
+            [
+              Query.limit(50),
+              Query.orderDesc("$createdAt"),
+              Query.cursorAfter(lastId), // This is the bypass
+            ],
+          );
+
+          const newDocs = response.documents as unknown as ClientData[];
+
+          set({
+            clients: [...clients, ...newDocs], // Append new clients to the list
+            lastId:
+              newDocs.length > 0 ? newDocs[newDocs.length - 1].$id : lastId,
+            hasMore: newDocs.length === 50,
+          });
+        } catch (error) {
+          console.error("Pagination error:", error);
+        } finally {
+          set({ isSyncing: false });
         }
       },
 
@@ -79,7 +125,7 @@ export const useClientStore = create<ClientState>()(
             DATABASE_ID!,
             CLIENT_COLLECTION_ID,
             ID.unique(),
-            clientPayload
+            clientPayload,
           );
 
           // 3. If Pet Name exists, create the Pet linked to this Client
@@ -93,7 +139,7 @@ export const useClientStore = create<ClientState>()(
                 type: formData.petType,
                 breed: formData.petBreed,
                 clientId: newClient.$id, // The link
-              }
+              },
             );
           }
 
@@ -119,14 +165,14 @@ export const useClientStore = create<ClientState>()(
             DATABASE_ID!,
             CLIENT_COLLECTION_ID,
             id,
-            data
+            data,
           );
 
           set((state) => ({
             clients: state.clients.map((c) =>
               c.$id === id
                 ? { ...c, ...(updatedDoc as unknown as ClientData) }
-                : c
+                : c,
             ),
             selectedClient:
               state.selectedClient?.$id === id
@@ -150,7 +196,7 @@ export const useClientStore = create<ClientState>()(
           await databases.deleteDocument(
             DATABASE_ID!,
             CLIENT_COLLECTION_ID,
-            id
+            id,
           );
 
           set((state) => ({
@@ -176,6 +222,6 @@ export const useClientStore = create<ClientState>()(
         clients: state.clients,
         searchQuery: state.searchQuery,
       }),
-    }
-  )
+    },
+  ),
 );

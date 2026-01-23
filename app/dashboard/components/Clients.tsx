@@ -33,6 +33,9 @@ export default function ClientsSection() {
     setSelectedClient,
     searchQuery,
     setSearchQuery,
+    isSyncing,
+    hasMore,
+    loadMoreClients,
   } = useClientStore();
 
   const { allPets, fetchAllPets } = usePetStore();
@@ -74,7 +77,7 @@ export default function ClientsSection() {
       const petMatch = client.pets.some(
         (pet) =>
           pet.name.toLowerCase().includes(searchLower) ||
-          (pet.breed && pet.breed.toLowerCase().includes(searchLower))
+          (pet.breed && pet.breed.toLowerCase().includes(searchLower)),
       );
       return nameMatch || phoneMatch || petMatch;
     });
@@ -247,6 +250,20 @@ export default function ClientsSection() {
                           </span>
                         </div>
                       </div>
+
+                      {hasMore && (
+                        <Button
+                          onClick={loadMoreClients}
+                          disabled={isSyncing}
+                          className="w-full mt-4 bg-slate-800 hover:bg-slate-700 text-[10px] font-black uppercase tracking-widest py-6"
+                        >
+                          {isSyncing ? (
+                            <Loader2 className="animate-spin" />
+                          ) : (
+                            "Load More Records"
+                          )}
+                        </Button>
+                      )}
                     </div>
                   );
                 })

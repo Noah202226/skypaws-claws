@@ -22,12 +22,12 @@ interface InstallmentState {
     amount: number,
     method: string,
     customeDate: string,
-    notes: string
+    notes: string,
   ) => Promise<void>;
   deleteInstallment: (
     installmentId: string,
     transactionId: string,
-    petId: string
+    petId: string,
   ) => Promise<void>;
 }
 
@@ -46,7 +46,8 @@ export const useInstallmentStore = create<InstallmentState>((set, get) => ({
         [
           Query.equal("transactionId", transactionId),
           Query.orderAsc("paymentDate"),
-        ]
+          Query.limit(5000),
+        ],
       );
       set((state) => ({
         installments: {
@@ -65,7 +66,7 @@ export const useInstallmentStore = create<InstallmentState>((set, get) => ({
     amount: number,
     method: string,
     customDate?: string,
-    notes?: string
+    notes?: string,
   ) => {
     try {
       // 1. Create the payment record in Appwrite
@@ -79,7 +80,7 @@ export const useInstallmentStore = create<InstallmentState>((set, get) => ({
           paymentDate: customDate || new Date().toISOString(),
           paymentMethod: method,
           notes: notes || "Payment received", // Use the dynamic note
-        }
+        },
       );
 
       // 2. Get current transaction data from Appwrite to ensure precision
@@ -87,7 +88,7 @@ export const useInstallmentStore = create<InstallmentState>((set, get) => ({
       const targetTx = await databases.getDocument(
         DATABASE_ID!,
         TRANSACTION_COLLECTION_ID,
-        transactionId
+        transactionId,
       );
 
       const currentBalance = targetTx.balanceRemaining;
@@ -102,7 +103,7 @@ export const useInstallmentStore = create<InstallmentState>((set, get) => ({
         {
           balanceRemaining: newBalance,
           status: newStatus,
-        }
+        },
       );
 
       // 4. RE-FETCH FRESH DATA: Instead of updating local state manually,
@@ -122,14 +123,14 @@ export const useInstallmentStore = create<InstallmentState>((set, get) => ({
   deleteInstallment: async (
     installmentId: string,
     transactionId: string,
-    petId: string
+    petId: string,
   ) => {
     try {
       // 1. Get the installment document first to know how much was paid
       const installment = await databases.getDocument(
         DATABASE_ID!,
         INSTALLMENT_COLLECTION_ID,
-        installmentId
+        installmentId,
       );
       const amountToRestore = installment.amountPaid;
 
@@ -137,14 +138,14 @@ export const useInstallmentStore = create<InstallmentState>((set, get) => ({
       const tx = await databases.getDocument(
         DATABASE_ID!,
         TRANSACTION_COLLECTION_ID,
-        transactionId
+        transactionId,
       );
 
       // 3. Delete the installment
       await databases.deleteDocument(
         DATABASE_ID!,
         INSTALLMENT_COLLECTION_ID,
-        installmentId
+        installmentId,
       );
 
       // 4. Update the Transaction document with restored balance
@@ -157,7 +158,7 @@ export const useInstallmentStore = create<InstallmentState>((set, get) => ({
         {
           balanceRemaining: newBalance,
           status: newBalance <= 0 ? "Paid" : "Partial",
-        }
+        },
       );
 
       // 5. Refresh both local states

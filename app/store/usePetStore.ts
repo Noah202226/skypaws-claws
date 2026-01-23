@@ -42,7 +42,7 @@ interface PetState {
   addTransaction: (data: Omit<Transaction, "$id">) => Promise<void>;
   updateTransactionPayment: (
     id: string,
-    additionalPayment: number
+    additionalPayment: number,
   ) => Promise<void>;
 }
 
@@ -70,7 +70,7 @@ export const usePetStore = create<PetState>()(
           const response = await databases.listDocuments(
             DATABASE_ID!,
             PETS_COLLECTION_ID,
-            [Query.limit(1000)]
+            [Query.limit(5000)],
           );
           set({ allPets: response.documents as unknown as Pet[] });
         } catch (error) {
@@ -86,7 +86,11 @@ export const usePetStore = create<PetState>()(
           const response = await databases.listDocuments(
             DATABASE_ID!,
             PETS_COLLECTION_ID,
-            [Query.equal("clientId", clientId)]
+            [
+              Query.equal("clientId", clientId),
+              Query.limit(100),
+              Query.orderAsc("name"),
+            ],
           );
           set({ clientPets: response.documents as unknown as Pet[] });
         } catch (error) {
@@ -103,7 +107,7 @@ export const usePetStore = create<PetState>()(
             DATABASE_ID!,
             PETS_COLLECTION_ID,
             ID.unique(),
-            data
+            data,
           );
 
           const petDoc = newPet as unknown as Pet;
@@ -128,7 +132,7 @@ export const usePetStore = create<PetState>()(
           await databases.deleteDocument(
             DATABASE_ID!,
             PETS_COLLECTION_ID,
-            petId
+            petId,
           );
 
           // Update local state: remove from allPets and clientPets
@@ -150,7 +154,11 @@ export const usePetStore = create<PetState>()(
           const response = await databases.listDocuments(
             DATABASE_ID!,
             TRANSACTIONS_COLLECTION_ID!,
-            [Query.equal("petId", petId)]
+            [
+              Query.equal("petId", petId),
+              Query.limit(5000), // Ensure full medical/billing history is visible
+              Query.orderDesc("date"), // Show newest transactions first
+            ],
           );
           set({ transactions: response.documents as unknown as Transaction[] });
         } catch (error) {
@@ -166,7 +174,7 @@ export const usePetStore = create<PetState>()(
             DATABASE_ID!,
             TRANSACTIONS_COLLECTION_ID!,
             ID.unique(),
-            data
+            data,
           );
           set((state) => ({
             transactions: [
@@ -196,12 +204,12 @@ export const usePetStore = create<PetState>()(
               amountPaid: newAmountPaid,
               balanceRemaining: newBalance,
               paymentStatus: newBalance <= 0 ? "Paid" : "Partial",
-            }
+            },
           );
 
           set((state) => ({
             transactions: state.transactions.map((t) =>
-              t.$id === id ? (updated as unknown as Transaction) : t
+              t.$id === id ? (updated as unknown as Transaction) : t,
             ),
           }));
         } catch (error) {
@@ -214,6 +222,6 @@ export const usePetStore = create<PetState>()(
       storage: createJSONStorage(() => localStorage),
       // We only want to persist the lists, not the loading states
       partialize: (state) => ({ allPets: state.allPets }),
-    }
-  )
+    },
+  ),
 );
