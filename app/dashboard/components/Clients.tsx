@@ -21,7 +21,6 @@ import PetDetailModal from "./clients/PetDetailModal";
 import { formatDate } from "./utils/dateFormatter";
 import { usePetStore } from "@/app/store/usePetStore";
 import { Pet } from "@/app/types/index";
-import AppointmentReminders from "../AppointmentReminders";
 import { useTransactionStore } from "@/app/store/useTransactionStore";
 
 export default function ClientsSection() {
@@ -50,13 +49,8 @@ export default function ClientsSection() {
   }, [fetchClients, fetchAllPets, fetchTransactions]);
 
   const clientsWithPets = useMemo(() => {
-    // 1. Always map clients even if pets aren't loaded yet to prevent empty screen
     return clients.map((client) => {
-      // 2. Debug: If pets aren't showing, log one check
-      // console.log(`Checking pets for ${client.name} (ID: ${client.$id})`);
-
       const pets = allPets.filter((p) => {
-        // Force string comparison and trim to avoid hidden whitespace issues
         return String(p.clientId).trim() === String(client.$id).trim();
       });
 
@@ -65,7 +59,7 @@ export default function ClientsSection() {
         pets: pets || [],
       };
     });
-  }, [clients, allPets]); // This will re-run as soon as allPets is updated from the fetch
+  }, [clients, allPets]);
 
   const filteredClients = useMemo(() => {
     const searchLower = searchQuery.toLowerCase().trim();
@@ -104,11 +98,10 @@ export default function ClientsSection() {
             variant="ghost"
             size="icon"
             onClick={async () => {
-              // This will refresh both Clients and Pets
               await Promise.all([
                 fetchClients(true),
                 fetchAllPets(true),
-                fetchTransactions(), // <--- This updates the sidebar data!
+                fetchTransactions(),
               ]);
             }}
             disabled={isLoading}
@@ -156,117 +149,122 @@ export default function ClientsSection() {
               <Loader2 className="h-10 w-10 text-indigo-500 animate-spin" />
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <>
               {filteredClients.length > 0 ? (
-                filteredClients.map((client) => {
-                  // Use the pre-filtered pets from our memo
-                  const clientPets = client.pets || [];
+                <>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {filteredClients.map((client) => {
+                      const clientPets = client.pets || [];
+                      const isNew = (() => {
+                        const createdDate = new Date(
+                          client.$createdAt,
+                        ).getTime();
+                        return (
+                          new Date().getTime() - createdDate <
+                          24 * 60 * 60 * 1000
+                        );
+                      })();
 
-                  const isNew = (() => {
-                    const createdDate = new Date(client.$createdAt).getTime();
-                    return (
-                      new Date().getTime() - createdDate < 24 * 60 * 60 * 1000
-                    );
-                  })();
+                      return (
+                        <div
+                          key={client.$id}
+                          onClick={() => setSelectedClient(client)}
+                          className="relative group w-full text-left bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/60 rounded-3xl p-6 hover:bg-slate-50 dark:hover:bg-slate-900/80 hover:border-indigo-500/40 transition-all duration-300 shadow-sm hover:shadow-xl dark:shadow-none cursor-pointer overflow-hidden"
+                        >
+                          <div className="absolute -right-8 -top-8 w-24 h-24 bg-indigo-500/5 dark:bg-indigo-600/10 blur-3xl group-hover:bg-indigo-500/20 transition-all" />
 
-                  return (
-                    <div
-                      key={client.$id}
-                      onClick={() => setSelectedClient(client)}
-                      className="relative group w-full text-left bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/60 rounded-3xl p-6 hover:bg-slate-50 dark:hover:bg-slate-900/80 hover:border-indigo-500/40 transition-all duration-300 shadow-sm hover:shadow-xl dark:shadow-none cursor-pointer overflow-hidden"
-                    >
-                      {/* Brand Accent Blur */}
-                      <div className="absolute -right-8 -top-8 w-24 h-24 bg-indigo-500/5 dark:bg-indigo-600/10 blur-3xl group-hover:bg-indigo-500/20 transition-all" />
-
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-4">
-                          <div className="h-14 w-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:scale-105 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500">
-                            <Users className="h-6 w-6 text-slate-500 dark:text-indigo-400 group-hover:text-white transition-colors" />
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center gap-4">
+                              <div className="h-14 w-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:scale-105 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500">
+                                <Users className="h-6 w-6 text-slate-500 dark:text-indigo-400 group-hover:text-white transition-colors" />
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="text-lg font-black text-slate-900 dark:text-white tracking-tight leading-none">
+                                    {client.name}
+                                  </h4>
+                                  {isNew && (
+                                    <span className="bg-indigo-600 text-[8px] font-black px-1.5 py-0.5 rounded text-white italic">
+                                      NEW
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">
+                                  Registered: {formatDate(client.$createdAt)}
+                                </span>
+                              </div>
+                            </div>
+                            <ChevronRight className="h-5 w-5 text-slate-300 dark:text-slate-700 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" />
                           </div>
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <h4 className="text-lg font-black text-slate-900 dark:text-white tracking-tight leading-none">
-                                {client.name}
-                              </h4>
-                              {isNew && (
-                                <span className="bg-indigo-600 text-[8px] font-black px-1.5 py-0.5 rounded text-white italic">
-                                  NEW
+
+                          <div className="grid grid-cols-2 gap-3 mb-5 px-1">
+                            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                              <Phone className="h-3.5 w-3.5 text-indigo-500/70" />
+                              <span className="text-[11px] font-bold tracking-tight">
+                                {client.phone}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                              <MapPin className="h-3.5 w-3.5 text-indigo-500/70" />
+                              <span className="text-[11px] font-bold tracking-tight truncate">
+                                {client.address || "No Address Provided"}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="pt-4 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
+                            <div className="flex flex-wrap gap-1.5">
+                              {clientPets.length > 0 ? (
+                                clientPets.slice(0, 2).map((pet: any) => (
+                                  <button
+                                    key={pet.$id}
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedPet(pet);
+                                    }}
+                                    className="relative z-10 bg-pink-50 dark:bg-pink-500/10 hover:bg-pink-500 hover:text-white dark:hover:bg-pink-500/30 text-pink-600 dark:text-pink-400 text-[9px] font-black uppercase px-2.5 py-1 rounded-lg border border-pink-100 dark:border-pink-500/20 shadow-sm transition-all"
+                                  >
+                                    {pet.name}
+                                  </button>
+                                ))
+                              ) : (
+                                <span className="text-slate-300 dark:text-slate-600 text-[9px] font-black uppercase tracking-widest">
+                                  No Registered Pets
                                 </span>
                               )}
                             </div>
-                            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">
-                              Registered: {formatDate(client.$createdAt)}
-                            </span>
+
+                            <div className="flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-500/10 px-3 py-1.5 rounded-full border border-indigo-100 dark:border-indigo-500/20">
+                              <PawPrint className="h-3 w-3 text-indigo-600 dark:text-indigo-400" />
+                              <span className="text-[10px] font-black text-indigo-700 dark:text-indigo-400 uppercase">
+                                {clientPets.length}{" "}
+                                {clientPets.length === 1 ? "Pet" : "Pets"}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                        <ChevronRight className="h-5 w-5 text-slate-300 dark:text-slate-700 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" />
-                      </div>
+                      );
+                    })}
+                  </div>
 
-                      {/* Contact Info */}
-                      <div className="grid grid-cols-2 gap-3 mb-5 px-1">
-                        <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                          <Phone className="h-3.5 w-3.5 text-indigo-500/70" />
-                          <span className="text-[11px] font-bold tracking-tight">
-                            {client.phone}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                          <MapPin className="h-3.5 w-3.5 text-indigo-500/70" />
-                          <span className="text-[11px] font-bold tracking-tight truncate">
-                            {client.address || "No Address Provided"}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Pet Tags */}
-                      <div className="pt-4 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
-                        <div className="flex flex-wrap gap-1.5">
-                          {clientPets.length > 0 ? (
-                            clientPets.slice(0, 2).map((pet: any) => (
-                              <button
-                                key={pet.$id}
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedPet(pet);
-                                }}
-                                className="relative z-10 bg-pink-50 dark:bg-pink-500/10 hover:bg-pink-500 hover:text-white dark:hover:bg-pink-500/30 text-pink-600 dark:text-pink-400 text-[9px] font-black uppercase px-2.5 py-1 rounded-lg border border-pink-100 dark:border-pink-500/20 shadow-sm transition-all"
-                              >
-                                {pet.name}
-                              </button>
-                            ))
-                          ) : (
-                            <span className="text-slate-300 dark:text-slate-600 text-[9px] font-black uppercase tracking-widest">
-                              No Registered Pets
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-500/10 px-3 py-1.5 rounded-full border border-indigo-100 dark:border-indigo-500/20">
-                          <PawPrint className="h-3 w-3 text-indigo-600 dark:text-indigo-400" />
-                          <span className="text-[10px] font-black text-indigo-700 dark:text-indigo-400 uppercase">
-                            {clientPets.length}{" "}
-                            {clientPets.length === 1 ? "Pet" : "Pets"}
-                          </span>
-                        </div>
-                      </div>
-
-                      {hasMore && (
-                        <Button
-                          onClick={loadMoreClients}
-                          disabled={isSyncing}
-                          className="w-full mt-4 bg-slate-800 hover:bg-slate-700 text-[10px] font-black uppercase tracking-widest py-6"
-                        >
-                          {isSyncing ? (
-                            <Loader2 className="animate-spin" />
-                          ) : (
-                            "Load More Records"
-                          )}
-                        </Button>
-                      )}
+                  {/* LOAD MORE BUTTON: Corrected placement outside the card mapping */}
+                  {hasMore && (
+                    <div className="mt-8 flex justify-center">
+                      <Button
+                        onClick={loadMoreClients}
+                        disabled={isSyncing}
+                        className="w-full max-w-md bg-slate-800 hover:bg-slate-700 text-[10px] font-black uppercase tracking-widest py-6 rounded-2xl transition-all shadow-lg"
+                      >
+                        {isSyncing ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          "Load More Records"
+                        )}
+                      </Button>
                     </div>
-                  );
-                })
+                  )}
+                </>
               ) : (
                 <div className="col-span-full py-20 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl bg-slate-50 dark:bg-slate-900/20">
                   <p className="text-slate-400 dark:text-slate-600 text-sm font-black uppercase tracking-[0.2em]">
@@ -274,7 +272,7 @@ export default function ClientsSection() {
                   </p>
                 </div>
               )}
-            </div>
+            </>
           )}
         </div>
       </div>
@@ -297,7 +295,6 @@ export default function ClientsSection() {
         isOpen={!!selectedPet}
         onClose={async () => {
           setSelectedPet(null);
-          // Refresh pets and transactions so the sidebar removes the deleted pet's reminders
           await Promise.all([fetchAllPets(true), fetchTransactions()]);
         }}
       />
