@@ -57,7 +57,7 @@ export const useClientStore = create<ClientState>()(
             DATABASE_ID!,
             CLIENT_COLLECTION_ID,
             [
-              Query.limit(50), // MATCH THE PAGINATION LIMIT
+              Query.limit(5000), // MATCH THE PAGINATION LIMIT
               Query.orderDesc("$createdAt"),
             ],
           );

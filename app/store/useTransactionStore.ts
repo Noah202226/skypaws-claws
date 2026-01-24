@@ -72,11 +72,11 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
       if (petId) {
         queries.push(Query.equal("petId", petId));
         // Increase this so a pet's entire medical history is visible
-        queries.push(Query.limit(1000));
+        queries.push(Query.limit(5000));
       } else {
         // Increase global limit so the recent transactions list is actually useful
         // If you have many transactions, consider implementing Cursor Pagination here later.
-        queries.push(Query.limit(1000));
+        queries.push(Query.limit(5000));
       }
 
       const response = await databases.listDocuments(
